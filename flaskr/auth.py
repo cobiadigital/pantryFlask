@@ -1,44 +1,16 @@
 import functools
-
 from flask import(
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
-from werkzeug.security import check_password_hash, generate_password_hash
+#from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.exceptions import abort
 from flaskr.db import get_db
-bp = Blueprint('auth', __name__, url_prefix='/auth')
+bp = Blueprint('auth', __name__, url_prefix='/')
 
-@bp.route('/register', methods=('GET','POST'))
-def register():
+@bp.route('/', methods=('GET', 'POST'))
+def index():
     if request.method == 'POST':
         phonenumber = request.form['phonenumber']
-        password = request.form['password']
-        db = get_db()
-        error = None
-
-        if not phonenumber:
-            error = 'Phonenumber is required.'
-        elif not password:
-            error = 'password is required.'
-
-        if error is None:
-            try:
-                db.execute(
-                    "INSERT INTO user (phonenumber, password) VALUES (?, ?)",
-                    (phonenumber, generate_password_hash(password)),
-                    )
-                db.commit()
-            except db.IntegrityError:
-                error = f"User {phonenumber} is already registered."
-            else:
-                return redirect(url_for("auth.login"))
-        flash(error)
-    return render_template('auth/register.html')
-
-@bp.route('/login', methods=('GET', 'POST'))
-def login():
-    if request.method == 'POST':
-        phonenumber = request.form['phonenumber']
-        password = request.form['password']
         db = get_db()
         error = None
         user = db.execute(
@@ -47,16 +19,93 @@ def login():
 
         if user is None:
             error = 'Incorrect Phone Number.'
-        elif not check_password_hash(user['password'], password):
-            error = 'Incorrect password.'
-
         if error is None:
             session.clear()
             session['user_id'] = user['id']
+            id = user['id']
+            if user['checked_in_state'] == 0:
+                db.execute(
+                    "UPDATE user SET check_in_state = ? WHERE ID = ?",
+                    (1, ID),
+                    )
+                db.execute(
+                    'INSERT INTO time_sheet (user_id, check_in_state) VALUES (?, ?)',
+                    (id, 1),
+                )
+                db.commit()
             return redirect(url_for('index'))
-
         flash(error)
-    return render_template('auth/login.html')
+    return render_template('auth/index.html')
+
+@bp.route('/register', methods=('GET','POST'))
+def register():
+    if request.method == 'POST':
+        phonenumber = request.form['phonenumber']
+        firstname = request.form['firstname']
+        lastname = request.form['lastname']
+        email = request.form['email']
+
+        db = get_db()
+        error = None
+
+        if not phonenumber:
+            error = 'Phonenumber is required.'
+        elif not firstname:
+            error = 'Your name is required.'
+        elif not lastname:
+            error = 'Your name is required.'
+        if error is None:
+            try:
+                db.execute(
+                    "INSERT INTO user (phonenumber, firstname, lastname, email, check_in_state) VALUES (?, ?, ?, ?, ?)",
+                    (phonenumber, firstname, lastname, email, 1),
+                    )
+                db.commit()
+            except db.IntegrityError:
+                error = f"The Phone Number: {phonenumber} is already registered."
+            else:
+                user = db.execute(
+                    'SELECT * FROM user WHERE phonenumber = ?', (phonenumber,)
+                ).fetchone()
+                session['user_id'] = user['id']
+                id = user['id']
+                return redirect(url_for("index"))
+        flash(error)
+    return render_template('auth/register.html')
+
+@bp.route('/update', methods=('GET', 'POST'))
+def update():
+    user = g.user
+
+    if request.method == 'POST':
+        id = g.user['id']
+        phonenumber = request.form['phonenumber']
+        firstname = request.form['firstname']
+        lastname = request.form['lastname']
+        email = request.form['email']
+        db = get_db()
+
+        error = None
+        if not phonenumber:
+            error = 'Phonenumber is required.'
+        elif not firstname:
+            error = 'Your name is required.'
+        elif not lastname:
+            error = 'Your name is required.'
+        elif error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            db.execute(
+                'UPDATE user SET phonenumber = ?, firstname = ?, lastname = ?, email = ?'
+                ' WHERE id = ?',
+                (phonenumber, firstname, lastname, email, id)
+            )
+            db.commit()
+            return redirect(url_for('auth.index'))
+
+    return render_template('auth/update.html', post=user)
+
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -79,6 +128,6 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('index'))
         return view(**kwargs)
     return wrapped_view

@@ -3,15 +3,20 @@ DROP TABLE IF EXISTS post;
 
 CREATE TABLE user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    phonenumber TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
+    phonenumber CHAR(10) UNIQUE NOT NULL,
+    firstname TEXT NOT NULL,
+    lastname TEXT NOT NULL,
+    email TEXT,
+    check_in_state BINARY,
+    account_activated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_check_in TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_check_out TIMESTAMP
 );
 
-CREATE TABLE post (
+CREATE TABLE time_sheet (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    author_id INTEGER NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    title TEXT NOT NULL,
-    body TEXT NOT NULL,
-    foreign key (author_id) REFERENCES user (id)
+    user_id INTEGER NOT NULL,
+    the_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    foreign key (user_id) REFERENCES user (id)
 );
