@@ -2,10 +2,14 @@ import functools
 from flask import(
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
+import pytz
+from pytz import timezone
 #from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import abort
 from flaskr.db import get_db
 bp = Blueprint('auth', __name__, url_prefix='/')
+
+central = timezone('US/Central')
 
 @bp.route('/', methods=('GET', 'POST'))
 def index():
@@ -18,15 +22,15 @@ def index():
         ).fetchone()
 
         if user is None:
-            error = 'Incorrect Phone Number.'
+            return redirect(url_for('auth.register', phonenumber=phonenumber) )
         if error is None:
             session.clear()
             session['user_id'] = user['id']
             id = user['id']
-            if user['checked_in_state'] == 0:
+            if user['check_in_state'] == 0:
                 db.execute(
-                    "UPDATE user SET check_in_state = ? WHERE ID = ?",
-                    (1, ID),
+                    "UPDATE user SET check_in_state = ?, last_check_in = current_timestamp WHERE ID = ?",
+                    (1, id),
                     )
                 db.execute(
                     'INSERT INTO time_sheet (user_id, check_in_state) VALUES (?, ?)',
@@ -131,3 +135,39 @@ def login_required(view):
             return redirect(url_for('index'))
         return view(**kwargs)
     return wrapped_view
+
+@bp.route('/checkout', methods=('GET', 'POST'))
+def checkout():
+    if request.method == 'POST':
+        checkout = request.form['checkout']
+        id = g.user['id']
+        db = get_db()
+        db.execute(
+            "UPDATE user SET check_in_state = ?, last_check_out = current_timestamp WHERE ID = ?",
+            (checkout,  id),
+        )
+        db.execute(
+            "INSERT INTO time_sheet (user_id, check_in_state) VALUES (?, ?)",
+            (id, checkout),
+        )
+        db.commit()
+        return redirect(url_for('auth.checkout'))
+    return render_template('auth/checkout.html')
+
+def update_time():
+    if request.method == 'POST':
+        db = get_db()
+        db.execute(
+            "UPDATE user SET check_in_state = ?, last_check_out = current_timestamp WHERE ID = ?",
+            (checkout,  id),
+        )
+        db.execute(
+            "INSERT INTO time_sheet (user_id, check_in_state) VALUES (?, ?)",
+            (id, checkout),
+        )
+        db.commit()
+        return redirect(url_for('auth.checkout'))
+    return render_template('auth/checkout.html')
+
+
+

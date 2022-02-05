@@ -1,4 +1,7 @@
 <!doctype html>
+{% block scripts %}
+    {{ moment.include_moment() }}
+{% endblock %}
 <title>{% block title %}{% endblock %} - Flaskr</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>

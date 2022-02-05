@@ -4,23 +4,33 @@
 {% endblock %}
 
 {% block content %}
-{% if g.user %}
-    <p> Welcome {{ g.user['firstname'] }}.</p>
-    {% if g.user['check_in_state'] %}
-        <p>You checked in at {{ g.user['last_check_in'] }}</p>
-    {% else %}
-        <p>You are checked out as of {{ g.user['last_check_out'] }}</p>
-    {% endif %}
-    <p>We have the following information about you. Please Varify:<br />
+    {% if g.user %}
+        {% if g.user['check_in_state'] %}
+            <p> Welcome {{ g.user['firstname'] }}.</p>
+            <p>You checked in at {{ moment(g.user.last_check_in).format('LLL') }}</p>
+
+            <p>Would you like to check out?<br />
+            <a href="{{ url_for('auth.checkout') }}">Check Out</a></p>
+        {% else %}
+            <p>You are checked out as of {{ moment(g.user.last_check_out).format('LLL') }}</p>
+            <form method="post">
+                <label for="phonenumber">Phone Number</label>
+                <input name="phonenumber" id="phonenumber" required>
+                <input type="submit" value="Check In">
+             </form>
+              <p>We have the following information about you. Please Verify:<br />
     Phone: {{ g.user['phonenumber'] }}<br />
     Name: {{ g.user['firstname'] }} {{ g.user['lastname'] }}<br />
     Email: {{ g.user['email'] }}</p>
     <p>if something looks wrong, please <a href="{{ url_for('auth.update') }}">update it.</a></p>
-{% else %}
-  <form method="post">
-    <label for="phonenumber">Phone Number</label>
-    <input name="phonenumber" id="phonenumber" required>
-    <input type="submit" value="Log In">
-  </form>
+
         {% endif %}
-{% endblock %}
+    {% else %}
+        <p>Please input your phone number to check in</p>
+    <form method="post">
+        <label for="phonenumber">Phone Number</label>
+        <input name="phonenumber" id="phonenumber" required>
+        <input type="submit" value="Check In">
+     </form>
+    {% endif %}
+  {% endblock %}

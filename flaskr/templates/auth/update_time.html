@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Edit {{ g.user['firstname'] }}'s info.{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="update_time_in">Time In</label>
+    <input name="update_time_in" id="update_time_in" type="time"
+           value="{{ g.user['the time'] or post['last_check_in'] }}" required>
+    <label for="update_time_out">Phone Number</label>
+    <input name="update_time_out" id="update_time_out" type="time"
+           value="{{ request.form['phonenumber'] or post['phonenumber'] }}" required>
+
+    <input type="submit" value="Update">
+  </form>
+
+{% endblock %}

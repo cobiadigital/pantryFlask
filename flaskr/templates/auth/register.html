@@ -7,7 +7,8 @@
 {% block content %}
   <form method="post">
     <label for="phonenumber">Phone Number</label>
-    <input name="phonenumber" id="phonenumber" required>
+    <input name="phonenumber" id="phonenumber"
+           value="{{ request.args.get("phonenumber") }}" required>
     <label for="firstname">First Name</label>
     <input type="firstname" name="firstname" id="firstname" required>
      <label for="lastname">Last Name</label>

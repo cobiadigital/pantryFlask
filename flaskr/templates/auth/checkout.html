@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+    {% if g.user['check_in_state'] %}
+    <p>Hi {{ g.user['firstname'] }},<br />
+        Looks like You checked in at {{ moment(g.user.last_check_in).format('LLL') }},
+    it's {{ moment().format('LLL') }} now. <br />
+        Are you sure you would like to check out?</p>
+    <form method="post">
+    <input type="hidden" name="checkout" id="checkout" value="0">
+        <input type="submit" value="Check Out">
+  </form>
+    {% else %}
+    <p>Thank you so much for volunteering with us today!
+    You checked in at {{ moment(g.user.last_check_in).format('LLL') }} and
+    checked out at {{ moment(g.user.last_check_out).format('LLL') }}</p>
+    <p>Your help today means food-insecure and hungry families are getting
+    nutritious families are getting nutritious groceries.</p>
+        <a href="{{  url_for('auth.index')}}">Check In</a>
+{% endif %}
+    <p>We have the following information about you. Please Varify:<br />
+    Phone: {{ g.user['phonenumber'] }}<br />
+    Name: {{ g.user['firstname'] }} {{ g.user['lastname'] }}<br />
+    Email: {{ g.user['email'] }}</p>
+    <p>if something looks wrong, please <a href="{{ url_for('auth.update') }}">update it.</a></p>
+
+{% endblock %}

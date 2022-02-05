@@ -35,4 +35,7 @@ def create_app(test_config=None):
     from . import blog
     app.register_blueprint(blog.bp)
 
+    from flask_moment import Moment
+    moment = Moment(app)
+
     return app

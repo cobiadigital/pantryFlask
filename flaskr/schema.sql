@@ -16,7 +16,9 @@ CREATE TABLE user (
 CREATE TABLE time_sheet (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
+    check_in_state BINARY NOT NULL,
     the_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    time_stamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     foreign key (user_id) REFERENCES user (id)
 );
