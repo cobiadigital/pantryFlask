@@ -142,13 +142,14 @@ def checkout():
         checkout = request.form['checkout']
         id = g.user['id']
         db = get_db()
+
         db.execute(
-            "UPDATE user SET check_in_state = ?, last_check_out = current_timestamp WHERE ID = ?",
-            (checkout,  id),
+            "UPDATE user SET check_in_state = ?, last_check_out = current_timestamp WHERE id = ? ",
+            (checkout, id),
         )
         db.execute(
-            "INSERT INTO time_sheet (user_id, check_in_state) VALUES (?, ?)",
-            (id, checkout),
+            "UPDATE time_sheet SET check_in_state = ?, time_out = current_timestamp WHERE user_id = ? AND ID = (SELECT max(ID) FROM time_sheet) ",
+            (checkout, id,),
         )
         db.commit()
         return redirect(url_for('auth.checkout'))
